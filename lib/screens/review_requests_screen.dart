@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../models/app_settings.dart';
 import '../models/borrower_app_state.dart';
-
 import 'home_screen.dart';
 import 'manage_offers_screen.dart';
-import 'performance_dashboard_screen.dart';
+// import 'performance_dashboard_screen.dart';
 import 'review_requests_screen.dart';
 
 class ReviewRequestsScreen extends StatelessWidget {
@@ -114,7 +113,7 @@ class ReviewRequestsScreen extends StatelessWidget {
                             const SizedBox(width:35),
 
 
-                            GestureDetector(
+                           /* GestureDetector(
                               onTap: (){
                                 Navigator.push(
                                   context,
@@ -131,7 +130,7 @@ class ReviewRequestsScreen extends StatelessWidget {
                                 "Performance Dashboard",
                               ),
                             ),
-
+*/
 
 
                             const SizedBox(width:35),

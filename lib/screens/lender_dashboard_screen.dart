@@ -4,8 +4,9 @@ import 'manage_offers_screen.dart';
 import 'review_requests_screen.dart';
 import 'home_screen.dart';
 import 'add_offer_screen.dart';
-import 'performance_dashboard_screen.dart';
 import '../models/loan_offer.dart';
+import '../models/dashboard_stats.dart';
+import '../services/dashboard_service.dart';
 
 class LenderDashboardScreen extends StatefulWidget {
   final String lenderName;
@@ -43,6 +44,9 @@ class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
   }
 
   List<LoanOffer> offersList = [];
+  final DashboardService service = DashboardService();
+
+DashboardStats? stats;
 
   void _navigateToHome(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
@@ -78,13 +82,35 @@ class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
       ),
     );
 
-    if (newOffer != null && newOffer is LoanOffer) {
-      setState(() {
-        offersList.add(newOffer);
-      });
-    }
+   if (newOffer != null && newOffer is LoanOffer) {
+
+  setState(() {
+
+    offersList.add(newOffer);
+
+  });
+
+  loadStats();
+
+}
   }
 
+@override
+void initState() {
+  super.initState();
+  loadStats();
+}
+
+
+void loadStats() {
+
+  final result = service.getDashboardStats(offersList);
+
+  setState(() {
+    stats = result;
+  });
+
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,22 +163,7 @@ class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
                           child: _navItem("Manage Offers"),
                         ),
                         const SizedBox(width: 35),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PerformanceDashboardScreen(
-                                  offers: [],
-                                ),
-                              ),
-                            );
-                          },
-                          child: _navItem(
-                            "Performance Dashboard",
-                          ),
-                        ),
+                        
                         const SizedBox(width: 35),
                         GestureDetector(
                           onTap: () {
@@ -274,20 +285,51 @@ class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
 ),
 
 const SizedBox(height: 35),
-                                  Row(
-                                    children: [
-                                      
-                                      _statCard(
-                                        "Active Offers",
-                                        "${offersList.length}",
-                                      ),
-                                      const SizedBox(width: 10),
-                                      _statCard(
-                                        "Bank Requests",
-                                        "0",
-                                      ),
-                                    ],
-                                  ),
+                                  Column(
+  children: [
+
+    Row(
+      children: [
+
+        _statCard(
+          "Active Offers",
+          stats?.activeOffers.toString() ?? "0",
+        ),
+
+        const SizedBox(width: 10),
+
+        _statCard(
+          "Bank Requests",
+          stats?.submittedRequests.toString() ?? "0",
+        ),
+
+      ],
+    ),
+
+
+    const SizedBox(height: 10),
+
+
+    Row(
+      children: [
+
+        _statCard(
+          "Pending Requests",
+          stats?.pendingRequests.toString() ?? "0",
+        ),
+
+        const SizedBox(width: 10),
+
+        _statCard(
+          "Average Rate",
+          "${stats?.averageRate ?? 0}%",
+        ),
+
+      ],
+    ),
+
+  ],
+)
                                 ],
                               ),
                             ),
