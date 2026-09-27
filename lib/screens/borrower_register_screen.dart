@@ -243,7 +243,7 @@ class _BorrowerRegisterScreenState extends State<BorrowerRegisterScreen> {
                               FilteringTextInputFormatter
                                   .digitsOnly,
 
-                              LengthLimitingTextInputFormatter(11),
+                              LengthLimitingTextInputFormatter(10),
 
                             ],
 
@@ -259,9 +259,9 @@ class _BorrowerRegisterScreenState extends State<BorrowerRegisterScreen> {
                               }
 
 
-                              if(value.length != 11){
+                              if(value.length != 10){
 
-                                return "Phone number must be 11 digits";
+                                return "Phone number must be 10 digits";
 
                               }
 

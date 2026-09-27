@@ -27,3 +27,7 @@ flutter:
   assets:
     - assets/images/rushd_log.png
     - assets/images/Home_logo.jpeg
+    - assets/images/Albilad-Bank-Logo.png
+    - assets/images/Alrajhi-Bank-Logo.png
+    - assets/images/Riyad-Bank-Logo.png
+    - assets/images/Saudi_National_Bank_Logo.png

@@ -6,6 +6,7 @@ import 'home_screen.dart';
 import 'add_offer_screen.dart';
 import 'performance_dashboard_screen.dart';
 import '../models/loan_offer.dart';
+
 class LenderDashboardScreen extends StatefulWidget {
   final String lenderName;
   final String bankName;
@@ -17,11 +18,30 @@ class LenderDashboardScreen extends StatefulWidget {
   });
 
   @override
-  State<LenderDashboardScreen> createState() => _LenderDashboardScreenState();
+  State<LenderDashboardScreen> createState() =>
+      _LenderDashboardScreenState();
 }
 
 class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
-  // قائمة تحفظ كائنات LoanOffer
+  String getBankLogo(String bankName) {
+    switch (bankName) {
+      case "Al Rajhi Bank":
+        return "assets/images/Alrajhi-Bank-Logo.png";
+
+      case "Riyad Bank":
+        return "assets/images/Riyad-Bank-Logo.png";
+
+      case "Saudi National Bank":
+        return "assets/images/Saudi_National_Bank_Logo.png";
+
+      case "Bank Albilad":
+        return "assets/images/Albilad-Bank-Logo.png";
+
+      default:
+        return "assets/images/rushd_log.png";
+    }
+  }
+
   List<LoanOffer> offersList = [];
 
   void _navigateToHome(BuildContext context) {
@@ -96,10 +116,9 @@ class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
                     Image.asset(
                       'assets/images/rushd_log.png',
                       width: 180,
-                      errorBuilder: (context, error, stackTrace) =>
-                          AppText(
+                      errorBuilder: (context, error, stackTrace) => AppText(
                         'Rushd',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -118,36 +137,37 @@ class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
                           child: _navItem("Manage Offers"),
                         ),
                         const SizedBox(width: 35),
-
-GestureDetector(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            PerformanceDashboardScreen(
-  offers: [],
-),
-      ),
-    );
-  },
-  child: _navItem("Performance Dashboard"),
-),
-
-const SizedBox(width: 35),
-
-GestureDetector(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            const ReviewRequestsScreen(),
-      ),
-    );
-  },
-  child: _navItem("Review Requests"),
-),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    PerformanceDashboardScreen(
+                                  offers: [],
+                                ),
+                              ),
+                            );
+                          },
+                          child: _navItem(
+                            "Performance Dashboard",
+                          ),
+                        ),
+                        const SizedBox(width: 35),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ReviewRequestsScreen(),
+                              ),
+                            );
+                          },
+                          child: _navItem(
+                            "Review Requests",
+                          ),
+                        ),
                       ],
                     ),
                     ElevatedButton(
@@ -164,7 +184,7 @@ GestureDetector(
                       onPressed: () => _navigateToHome(context),
                       child: AppText(
                         "Sign Out",
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -184,8 +204,9 @@ GestureDetector(
                       bool isMobile = constraints.maxWidth < 900;
 
                       return Flex(
-                        direction:
-                            isMobile ? Axis.vertical : Axis.horizontal,
+                        direction: isMobile
+                            ? Axis.vertical
+                            : Axis.horizontal,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Flexible(
@@ -197,8 +218,7 @@ GestureDetector(
                                 borderRadius: BorderRadius.circular(25),
                               ),
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -206,23 +226,21 @@ GestureDetector(
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color:
-                                          Colors.white.withOpacity(0.08),
-                                      borderRadius:
-                                          BorderRadius.circular(20),
+                                      color: Colors.white.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(
+                                        const Icon(
                                           Icons.lock_outline,
                                           color: Colors.white60,
                                           size: 14,
                                         ),
-                                        SizedBox(width: 6),
+                                        const SizedBox(width: 6),
                                         AppText(
                                           "Lender Representative Dashboard",
-                                          style: TextStyle(
+                                          style: const TextStyle(
                                             color: Colors.white60,
                                             fontSize: 12,
                                           ),
@@ -240,22 +258,25 @@ GestureDetector(
                                       height: 1.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 15),
-                                  AppText(
-                                    "Representing ${widget.bankName}. Manage your bank's offers and review borrower requests.",
-                                    style: const TextStyle(
-                                      color: Colors.white60,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 40),
+                                  const SizedBox(height: 20),
+                                  Container(
+  width: 170,
+  height: 85,
+  padding: const EdgeInsets.all(12),
+  decoration: BoxDecoration(
+    color: Colors.white.withOpacity(0.08),
+    borderRadius: BorderRadius.circular(18),
+  ),
+  child: Image.asset(
+    getBankLogo(widget.bankName),
+    fit: BoxFit.contain,
+  ),
+),
+
+const SizedBox(height: 35),
                                   Row(
                                     children: [
-                                      _statCard(
-                                        "Representing",
-                                        widget.bankName,
-                                      ),
-                                      const SizedBox(width: 10),
+                                      
                                       _statCard(
                                         "Active Offers",
                                         "${offersList.length}",
@@ -288,8 +309,9 @@ GestureDetector(
                                         description:
                                             "Edit, update, or delete your bank's offers.",
                                         icon: Icons.grid_view_rounded,
-                                        onTap: () =>
-                                            _openManageOffers(context),
+                                        onTap: () => _openManageOffers(
+                                          context,
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 20),
@@ -299,8 +321,7 @@ GestureDetector(
                                         title: "Review Requests",
                                         description:
                                             "Check borrower applications.",
-                                        icon:
-                                            Icons.check_circle_outline,
+                                        icon: Icons.check_circle_outline,
                                         onTap: () {
                                           Navigator.push(
                                             context,
@@ -349,8 +370,7 @@ GestureDetector(
           style: TextStyle(
             color: active ? Colors.lightBlue : Colors.white60,
             fontSize: 14,
-            fontWeight:
-                active ? FontWeight.bold : FontWeight.normal,
+            fontWeight: active ? FontWeight.bold : FontWeight.normal,
           ),
         ),
         if (active) ...[

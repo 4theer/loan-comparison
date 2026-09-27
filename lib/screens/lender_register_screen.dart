@@ -266,7 +266,7 @@ class _LenderRegisterScreenState extends State<LenderRegisterScreen> {
                               FilteringTextInputFormatter
                                   .digitsOnly,
 
-                              LengthLimitingTextInputFormatter(11),
+                              LengthLimitingTextInputFormatter(10),
 
                             ],
 
@@ -282,9 +282,9 @@ class _LenderRegisterScreenState extends State<LenderRegisterScreen> {
                               }
 
 
-                              if(value.length != 11){
+                              if(value.length != 10){
 
-                                return "Mobile number must be 11 digits";
+                                return "Mobile number must be 10 digits";
 
                               }
 
