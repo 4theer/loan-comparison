@@ -19,7 +19,42 @@ class BorrowerShell extends StatelessWidget {
    OutlinedButton(onPressed:()=>Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder:(_)=>const HomeScreen()),(_)=>false),style:OutlinedButton.styleFrom(backgroundColor:Colors.white.withOpacity(.08),side:BorderSide(color:Colors.white.withOpacity(.12)),shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(20)),padding:const EdgeInsets.symmetric(horizontal:22,vertical:12)),child:AppText('Sign Out',style:white(12,w:FontWeight.bold)))
   ])), Expanded(child:child)
  ]))));
- Widget _nav(BuildContext context,String t,int i)=>InkWell(onTap:(){if(i==0) Navigator.pushReplacementNamed(context,'/borrowerDashboard'); if(i==1) Navigator.pushReplacementNamed(context,'/chooseLoanType'); if(i==2) Navigator.pushReplacementNamed(context,'/requestStatus'); if(i==3) Navigator.pushReplacementNamed(context,'/borrowerProfile');},child:Padding(padding:const EdgeInsets.symmetric(vertical:8),child:AppText(t,style:white(12,w:i==active?FontWeight.bold:FontWeight.normal,c:i==active?kCyan:Colors.white70))));
+
+Widget _nav(BuildContext context, String t, int i) => InkWell(
+  onTap: () {
+    if (i == 0) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => const HomeScreen(),
+        ),
+        (route) => false,
+      );
+    }
+
+    if (i == 1) {
+      Navigator.pushReplacementNamed(context, '/chooseLoanType');
+    }
+
+    if (i == 2) {
+      Navigator.pushReplacementNamed(context, '/requestStatus');
+    }
+
+    if (i == 3) {
+      Navigator.pushReplacementNamed(context, '/borrowerProfile');
+    }
+  },
+  child: Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: AppText(
+      t,
+      style: white(
+        12,
+        w: i == active ? FontWeight.bold : FontWeight.normal,
+        c: i == active ? kCyan : Colors.white70,
+      ),
+    ),
+  ),
+);
 }
 
 Widget metric(String label,String value,{double? width})=>Container(width:width,padding:const EdgeInsets.all(16),decoration:panel(radius:14),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[AppText(label,style:white(11,c:Colors.white54)),const SizedBox(height:5),AppText(value,style:white(18,w:FontWeight.w800))]));
