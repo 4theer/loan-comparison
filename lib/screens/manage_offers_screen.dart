@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/app_settings.dart';
 import '../models/loan_offer.dart';
+import '../services/loan_offer_service.dart';
+
 import 'add_offer_screen.dart';
 import 'home_screen.dart';
 import 'review_requests_screen.dart';
@@ -8,70 +12,150 @@ import 'review_requests_screen.dart';
 class ManageOffersScreen extends StatefulWidget {
   final List<LoanOffer> offers;
 
-  const ManageOffersScreen({
-    super.key,
-    required this.offers,
-  });
+  const ManageOffersScreen({super.key, this.offers = const []});
 
   @override
   State<ManageOffersScreen> createState() => _ManageOffersScreenState();
 }
 
 class _ManageOffersScreenState extends State<ManageOffersScreen> {
-  late List<LoanOffer> _currentOffers;
+  final LoanOfferService _offerService = LoanOfferService();
+
+  List<LoanOffer> _currentOffers = [];
+
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+
     _currentOffers = List.from(widget.offers);
+
+    _loadOffers();
   }
 
-  void _navigateToHome(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
-      (route) => false,
-    );
-  }
+  Future<void> _loadOffers() async {
+    try {
+      final offers = await _offerService.getMyOffers();
 
-  Future<void> _deleteOffer(int index) async {
-    final offerToDelete = _currentOffers[index];
+      if (!mounted) return;
 
-    // TODO: مستقبلاً للربط مع الداتابيز أو الـ API:
-    // await DatabaseService.deleteOffer(offerToDelete.id);
+      setState(() {
+        _currentOffers = offers;
+        isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
 
-    setState(() {
-      _currentOffers.removeAt(index);
-    });
+      setState(() {
+        isLoading = false;
+      });
 
-    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: AppText("Offer '${offerToDelete.offerName}' deleted"),
-          duration: const Duration(seconds: 2),
+          content: Text('Error loading offers: $error'),
+          backgroundColor: Colors.redAccent,
         ),
       );
     }
   }
 
-  void _editOffer(int index) async {
+  void _navigateToHome(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+      (route) => false,
+    );
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error signing out: $error'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteOffer(int index) async {
+    final offerToDelete = _currentOffers[index];
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Delete Offer'),
+          content: Text(
+            'Are you sure you want to delete "${offerToDelete.offerName}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await _offerService.deleteOffer(offerToDelete.id);
+
+      if (!mounted) return;
+
+      setState(() {
+        _currentOffers.removeAt(index);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Offer '${offerToDelete.offerName}' deleted")),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error deleting offer: $error'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  Future<void> _editOffer(int index) async {
     final updatedOffer = await Navigator.push<LoanOffer>(
       context,
       MaterialPageRoute(
-        builder: (context) => AddOfferScreen(
-          existingOffer: _currentOffers[index],
-        ),
+        builder: (_) => AddOfferScreen(existingOffer: _currentOffers[index]),
       ),
     );
 
     if (updatedOffer != null) {
-      // TODO: مستقبلاً للربط مع الداتابيز عند التعديل:
-      // await DatabaseService.updateOffer(updatedOffer);
-
-      setState(() {
-        _currentOffers[index] = updatedOffer;
-      });
+      await _loadOffers();
     }
   }
 
@@ -83,11 +167,7 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              AppPalette.bg1,
-              AppPalette.bg2,
-              AppPalette.bg3,
-            ],
+            colors: [AppPalette.bg1, AppPalette.bg2, AppPalette.bg3],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -95,7 +175,6 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // الهيدر العلوي
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 40,
@@ -107,35 +186,39 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                     Image.asset(
                       'assets/images/rushd_log.png',
                       width: 180,
-                      errorBuilder: (context, error, stackTrace) =>
-                          AppText(
-                        'Rushd',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      errorBuilder: (context, error, stackTrace) {
+                        return AppText(
+                          'Rushd',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
                     ),
+
                     Row(
                       children: [
                         GestureDetector(
-                          onTap: () => Navigator.pop(context, _currentOffers),
+                          onTap: () {
+                            Navigator.pop(context, _currentOffers);
+                          },
                           child: _navItem("Home"),
                         ),
+
                         const SizedBox(width: 35),
-                        GestureDetector(
-                          onTap: () {},
-                          child: _navItem("Manage Offers", active: true),
-                        ),
+
+                        _navItem("Manage Offers", active: true),
+
                         const SizedBox(width: 35),
+
                         GestureDetector(
                           onTap: () {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ReviewRequestsScreen(),
+                                builder: (_) => const ReviewRequestsScreen(),
                               ),
                             );
                           },
@@ -143,6 +226,7 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                         ),
                       ],
                     ),
+
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue,
@@ -154,10 +238,12 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                           vertical: 12,
                         ),
                       ),
-                      onPressed: () => _navigateToHome(context),
+
+                      onPressed: _signOut,
+
                       child: AppText(
                         "Sign Out",
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -167,7 +253,6 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                 ),
               ),
 
-              // قائمة العروض
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -180,29 +265,63 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                       Row(
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.arrow_back,
-                                color: Colors.white),
-                            onPressed: () =>
-                                Navigator.pop(context, _currentOffers),
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context, _currentOffers);
+                            },
                           ),
+
                           const SizedBox(width: 10),
+
                           AppText(
                             "Manage Offers",
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+
+                          const Spacer(),
+
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.lightBlue,
+                            ),
+                            onPressed: () async {
+                              final result = await Navigator.push<LoanOffer>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AddOfferScreen(),
+                                ),
+                              );
+
+                              if (result != null) {
+                                await _loadOffers();
+                              }
+                            },
+                            icon: const Icon(Icons.add, color: Colors.white),
+                            label: const Text(
+                              'Add Offer',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
                         ],
                       ),
+
                       const SizedBox(height: 20),
+
                       Expanded(
-                        child: _currentOffers.isEmpty
+                        child: isLoading
+                            ? const Center(child: CircularProgressIndicator())
+                            : _currentOffers.isEmpty
                             ? Center(
                                 child: AppText(
                                   "No offers available.",
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: Colors.white60,
                                     fontSize: 16,
                                   ),
@@ -212,6 +331,7 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                                 itemCount: _currentOffers.length,
                                 itemBuilder: (context, index) {
                                   final offer = _currentOffers[index];
+
                                   return Container(
                                     margin: const EdgeInsets.only(bottom: 15),
                                     padding: const EdgeInsets.all(24),
@@ -236,7 +356,9 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
+
                                               const SizedBox(height: 8),
+
                                               AppText(
                                                 "${offer.bankName} • ${offer.amount} SAR • ${offer.loanType}",
                                                 style: const TextStyle(
@@ -244,46 +366,63 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
                                                   fontSize: 13,
                                                 ),
                                               ),
+
+                                              const SizedBox(height: 4),
+
+                                              AppText(
+                                                "Rate: ${offer.interestRate}% • Term: ${offer.term} months",
+                                                style: const TextStyle(
+                                                  color: Colors.white54,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ),
+
                                         Row(
-  children: [
-    ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.lightBlue,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      onPressed: () => _editOffer(index),
-      child: AppText(
-        "Edit",
-        style: TextStyle(
-          color: Colors.white,
-        ),
-      ),
-    ),
+                                          children: [
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.lightBlue,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              onPressed: () =>
+                                                  _editOffer(index),
+                                              child: AppText(
+                                                "Edit",
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
 
-    const SizedBox(width: 10),
+                                            const SizedBox(width: 10),
 
-    ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.redAccent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      onPressed: () => _deleteOffer(index),
-      child: AppText(
-        "Delete",
-        style: TextStyle(
-          color: Colors.white,
-        ),
-      ),
-    ),
-  ],
-),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.redAccent,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              onPressed: () =>
+                                                  _deleteOffer(index),
+                                              child: AppText(
+                                                "Delete",
+                                                style: const TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
                                   );
@@ -313,14 +452,14 @@ class _ManageOffersScreenState extends State<ManageOffersScreen> {
             fontWeight: active ? FontWeight.bold : FontWeight.normal,
           ),
         ),
-        if (active) ...[
-          const SizedBox(height: 4),
+
+        if (active)
           Container(
+            margin: const EdgeInsets.only(top: 4),
             width: 25,
             height: 2,
             color: Colors.lightBlue,
           ),
-        ],
       ],
     );
   }
