@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/app_settings.dart';
+
 import 'manage_offers_screen.dart';
 import 'review_requests_screen.dart';
 import 'home_screen.dart';
 import 'add_offer_screen.dart';
+
 import '../models/loan_offer.dart';
 import '../models/dashboard_stats.dart';
+
 import '../services/dashboard_service.dart';
+import '../services/loan_offer_service.dart';
 
 class LenderDashboardScreen extends StatefulWidget {
   final String lenderName;
@@ -19,8 +25,7 @@ class LenderDashboardScreen extends StatefulWidget {
   });
 
   @override
-  State<LenderDashboardScreen> createState() =>
-      _LenderDashboardScreenState();
+  State<LenderDashboardScreen> createState() => _LenderDashboardScreenState();
 }
 
 class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
@@ -44,73 +49,142 @@ class _LenderDashboardScreenState extends State<LenderDashboardScreen> {
   }
 
   List<LoanOffer> offersList = [];
+
   final DashboardService service = DashboardService();
 
-DashboardStats? stats;
+  final LoanOfferService offerService = LoanOfferService();
+
+  DashboardStats? stats;
+
+  bool isLoadingOffers = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    loadOffers();
+  }
+
+  Future<void> loadOffers() async {
+    try {
+      if (mounted) {
+        setState(() {
+          isLoadingOffers = true;
+        });
+      }
+
+      final offers = await offerService.getMyOffers();
+
+      final dashboardStats = await service.getDashboardStats(offers);
+
+      if (!mounted) return;
+
+      setState(() {
+        offersList = offers;
+        stats = dashboardStats;
+        isLoadingOffers = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoadingOffers = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading dashboard: $error'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  Future<void> loadStats() async {
+    try {
+      final result = await service.getDashboardStats(offersList);
+
+      if (!mounted) return;
+
+      setState(() {
+        stats = result;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error loading statistics: $error'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
 
   void _navigateToHome(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
       (route) => false,
     );
   }
 
-  void _openManageOffers(BuildContext context) async {
-    final updatedOffers = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ManageOffersScreen(
-          offers: offersList,
-        ),
-      ),
-    );
+  // REAL SUPABASE SIGN OUT
+  Future<void> _signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
 
-    if (updatedOffers != null && updatedOffers is List<LoanOffer>) {
-      setState(() {
-        offersList = updatedOffers;
-      });
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error signing out: $error'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
-  void _openAddOffer(BuildContext context) async {
-    final newOffer = await Navigator.push(
+  Future<void> _openManageOffers(BuildContext context) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const AddOfferScreen(),
+        builder: (context) => ManageOffersScreen(offers: offersList),
       ),
     );
 
-   if (newOffer != null && newOffer is LoanOffer) {
-
-  setState(() {
-
-    offersList.add(newOffer);
-
-  });
-
-  loadStats();
-
-}
+    // Refresh offers and dashboard statistics
+    await loadOffers();
   }
 
-@override
-void initState() {
-  super.initState();
-  loadStats();
-}
+  Future<void> _openAddOffer(BuildContext context) async {
+    final newOffer = await Navigator.push<LoanOffer>(
+      context,
+      MaterialPageRoute(builder: (context) => const AddOfferScreen()),
+    );
 
+    if (newOffer != null) {
+      await loadOffers();
+    }
+  }
 
-void loadStats() {
+  Future<void> _openReviewRequests(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ReviewRequestsScreen()),
+    );
 
-  final result = service.getDashboardStats(offersList);
+    // Refresh request numbers after returning
+    // from Review Requests.
+    await loadOffers();
+  }
 
-  setState(() {
-    stats = result;
-  });
-
-}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -119,11 +193,7 @@ void loadStats() {
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              AppPalette.bg1,
-              AppPalette.bg2,
-              AppPalette.bg3,
-            ],
+            colors: [AppPalette.bg1, AppPalette.bg2, AppPalette.bg3],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -131,6 +201,10 @@ void loadStats() {
         child: SafeArea(
           child: Column(
             children: [
+              // =========================
+              // TOP BAR
+              // =========================
+
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 40,
@@ -139,6 +213,7 @@ void loadStats() {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    // LOGO
                     Image.asset(
                       'assets/images/rushd_log.png',
                       width: 180,
@@ -151,36 +226,32 @@ void loadStats() {
                         ),
                       ),
                     ),
+
+                    // NAVIGATION
                     Row(
                       children: [
                         GestureDetector(
                           onTap: () => _navigateToHome(context),
                           child: _navItem("Home"),
                         ),
+
                         const SizedBox(width: 35),
+
                         GestureDetector(
                           onTap: () => _openManageOffers(context),
                           child: _navItem("Manage Offers"),
                         ),
+
                         const SizedBox(width: 35),
-                        
-                        const SizedBox(width: 35),
+
                         GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ReviewRequestsScreen(),
-                              ),
-                            );
-                          },
-                          child: _navItem(
-                            "Review Requests",
-                          ),
+                          onTap: () => _openReviewRequests(context),
+                          child: _navItem("Review Requests"),
                         ),
                       ],
                     ),
+
+                    // SIGN OUT
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue,
@@ -192,7 +263,10 @@ void loadStats() {
                           vertical: 12,
                         ),
                       ),
-                      onPressed: () => _navigateToHome(context),
+
+                      // Supabase sign out
+                      onPressed: _signOut,
+
                       child: AppText(
                         "Sign Out",
                         style: const TextStyle(
@@ -204,6 +278,10 @@ void loadStats() {
                   ],
                 ),
               ),
+
+              // =========================
+              // MAIN CONTENT
+              // =========================
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
@@ -215,11 +293,13 @@ void loadStats() {
                       bool isMobile = constraints.maxWidth < 900;
 
                       return Flex(
-                        direction: isMobile
-                            ? Axis.vertical
-                            : Axis.horizontal,
+                        direction: isMobile ? Axis.vertical : Axis.horizontal,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // =========================
+                          // LEFT PANEL
+                          // =========================
+
                           Flexible(
                             flex: isMobile ? 0 : 5,
                             child: Container(
@@ -248,7 +328,9 @@ void loadStats() {
                                           color: Colors.white60,
                                           size: 14,
                                         ),
+
                                         const SizedBox(width: 6),
+
                                         AppText(
                                           "Lender Representative Dashboard",
                                           style: const TextStyle(
@@ -259,7 +341,9 @@ void loadStats() {
                                       ],
                                     ),
                                   ),
+
                                   const SizedBox(height: 25),
+
                                   AppText(
                                     "Welcome,\n${widget.lenderName}",
                                     style: const TextStyle(
@@ -269,75 +353,85 @@ void loadStats() {
                                       height: 1.2,
                                     ),
                                   ),
+
                                   const SizedBox(height: 20),
+
                                   Container(
-  width: 170,
-  height: 85,
-  padding: const EdgeInsets.all(12),
-  decoration: BoxDecoration(
-    color: Colors.white.withOpacity(0.08),
-    borderRadius: BorderRadius.circular(18),
-  ),
-  child: Image.asset(
-    getBankLogo(widget.bankName),
-    fit: BoxFit.contain,
-  ),
-),
+                                    width: 170,
+                                    height: 85,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                    child: Image.asset(
+                                      getBankLogo(widget.bankName),
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
 
-const SizedBox(height: 35),
-                                  Column(
-  children: [
+                                  const SizedBox(height: 35),
 
-    Row(
-      children: [
+                                  if (isLoadingOffers)
+                                    const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  else
+                                    Column(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            _statCard(
+                                              "Active Offers",
+                                              stats?.activeOffers.toString() ??
+                                                  "0",
+                                            ),
 
-        _statCard(
-          "Active Offers",
-          stats?.activeOffers.toString() ?? "0",
-        ),
+                                            const SizedBox(width: 10),
 
-        const SizedBox(width: 10),
+                                            _statCard(
+                                              "Bank Requests",
+                                              stats?.submittedRequests
+                                                      .toString() ??
+                                                  "0",
+                                            ),
+                                          ],
+                                        ),
 
-        _statCard(
-          "Bank Requests",
-          stats?.submittedRequests.toString() ?? "0",
-        ),
+                                        const SizedBox(height: 10),
 
-      ],
-    ),
+                                        Row(
+                                          children: [
+                                            _statCard(
+                                              "Pending Requests",
+                                              stats?.pendingRequests
+                                                      .toString() ??
+                                                  "0",
+                                            ),
 
+                                            const SizedBox(width: 10),
 
-    const SizedBox(height: 10),
-
-
-    Row(
-      children: [
-
-        _statCard(
-          "Pending Requests",
-          stats?.pendingRequests.toString() ?? "0",
-        ),
-
-        const SizedBox(width: 10),
-
-        _statCard(
-          "Average Rate",
-          "${stats?.averageRate ?? 0}%",
-        ),
-
-      ],
-    ),
-
-  ],
-)
+                                            _statCard(
+                                              "Average Rate",
+                                              "${stats?.averageRate.toStringAsFixed(2) ?? '0'}%",
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                 ],
                               ),
                             ),
                           ),
+
                           SizedBox(
                             width: isMobile ? 0 : 25,
                             height: isMobile ? 25 : 0,
                           ),
+
+                          // =========================
+                          // RIGHT PANEL
+                          // =========================
                           Flexible(
                             flex: isMobile ? 0 : 6,
                             child: Column(
@@ -351,12 +445,12 @@ const SizedBox(height: 35),
                                         description:
                                             "Edit, update, or delete your bank's offers.",
                                         icon: Icons.grid_view_rounded,
-                                        onTap: () => _openManageOffers(
-                                          context,
-                                        ),
+                                        onTap: () => _openManageOffers(context),
                                       ),
                                     ),
+
                                     const SizedBox(width: 20),
+
                                     Expanded(
                                       child: _actionCard(
                                         context,
@@ -364,20 +458,15 @@ const SizedBox(height: 35),
                                         description:
                                             "Check borrower applications.",
                                         icon: Icons.check_circle_outline,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const ReviewRequestsScreen(),
-                                            ),
-                                          );
-                                        },
+                                        onTap: () =>
+                                            _openReviewRequests(context),
                                       ),
                                     ),
                                   ],
                                 ),
+
                                 const SizedBox(height: 20),
+
                                 _actionCard(
                                   context,
                                   title: "Add New Offer",
@@ -415,13 +504,10 @@ const SizedBox(height: 35),
             fontWeight: active ? FontWeight.bold : FontWeight.normal,
           ),
         ),
+
         if (active) ...[
           const SizedBox(height: 4),
-          Container(
-            width: 25,
-            height: 2,
-            color: Colors.lightBlue,
-          ),
+          Container(width: 25, height: 2, color: Colors.lightBlue),
         ],
       ],
     );
@@ -430,10 +516,7 @@ const SizedBox(height: 35),
   Widget _statCard(String label, String value) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(15),
@@ -443,14 +526,13 @@ const SizedBox(height: 35),
           children: [
             AppText(
               label,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: Colors.white60, fontSize: 11),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+
             const SizedBox(height: 6),
+
             AppText(
               value,
               style: const TextStyle(
@@ -490,12 +572,10 @@ const SizedBox(height: 35),
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: Colors.lightBlue,
-              size: 32,
-            ),
+            Icon(icon, color: Colors.lightBlue, size: 32),
+
             const SizedBox(height: 16),
+
             AppText(
               title,
               style: const TextStyle(
@@ -504,13 +584,12 @@ const SizedBox(height: 35),
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 8),
+
             AppText(
               description,
-              style: const TextStyle(
-                color: Colors.white60,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
             ),
           ],
         ),

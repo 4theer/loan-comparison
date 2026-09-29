@@ -1,31 +1,22 @@
 import 'package:flutter/material.dart';
+
 import '../models/app_settings.dart';
+
 import 'login_screen.dart';
 import 'lender_register_screen.dart';
 import 'borrower_register_screen.dart';
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  
   final List<Map<String, String>> partnerBanks = const [
-    {
-      "name": "Riyad Bank",
-      "logo": "assets/images/Riyad-Bank-Logo.png",
-    },
+    {"name": "Riyad Bank", "logo": "assets/images/Riyad-Bank-Logo.png"},
     {
       "name": "Saudi National Bank",
       "logo": "assets/images/Saudi_National_Bank_Logo.png",
     },
-    
-    {
-      "name": "Bank Albilad",
-      "logo": "assets/images/Albilad-Bank-Logo.png",
-    },
-    {
-      "name": "Al Rajhi Bank",
-      "logo": "assets/images/Alrajhi-Bank-Logo.png",
-    },
-    
+    {"name": "Bank Albilad", "logo": "assets/images/Albilad-Bank-Logo.png"},
+    {"name": "Al Rajhi Bank", "logo": "assets/images/Alrajhi-Bank-Logo.png"},
   ];
 
   @override
@@ -35,11 +26,7 @@ class HomeScreen extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              AppPalette.bg1,
-              AppPalette.bg2,
-              AppPalette.bg3,
-            ],
+            colors: [AppPalette.bg1, AppPalette.bg2, AppPalette.bg3],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -56,11 +43,8 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Image.asset(
-                      'assets/images/rushd_log.png',
-                      width: 180,
-                    ),
-                    
+                    Image.asset('assets/images/rushd_log.png', width: 180),
+
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue,
@@ -76,9 +60,7 @@ class HomeScreen extends StatelessWidget {
                           ),
                         );
                       },
-                      child: AppText(
-                        "Get Started",
-                      ),
+                      child: AppText("Get Started"),
                     ),
                   ],
                 ),
@@ -126,7 +108,9 @@ class HomeScreen extends StatelessWidget {
                               ],
                             ),
                           ),
+
                           const SizedBox(height: 20),
+
                           RichAppText(
                             text: const TextSpan(
                               children: [
@@ -157,7 +141,9 @@ class HomeScreen extends StatelessWidget {
                               ],
                             ),
                           ),
+
                           const SizedBox(height: 20),
+
                           AppText(
                             "Enter your loan type and financial details,\n"
                             "compare suitable offers, submit your request\n"
@@ -168,7 +154,9 @@ class HomeScreen extends StatelessWidget {
                               height: 1.5,
                             ),
                           ),
+
                           const SizedBox(height: 30),
+
                           Row(
                             children: [
                               ElevatedButton(
@@ -176,37 +164,39 @@ class HomeScreen extends StatelessWidget {
                                   backgroundColor: Colors.lightBlue,
                                 ),
                                 onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const BorrowerRegisterScreen(),
-    ),
-  );
-},
-                                child: AppText(
-                                  "Start Your Assessment →",
-                                ),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const BorrowerRegisterScreen(),
+                                    ),
+                                  );
+                                },
+                                child: AppText("Start Your Assessment →"),
                               ),
+
                               const SizedBox(width: 15),
+
                               OutlinedButton(
                                 onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const LenderRegisterScreen(),
-    ),
-  );
-},
-                                child: AppText(
-                                  "I am a Lender",
-                                ),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const LenderRegisterScreen(),
+                                    ),
+                                  );
+                                },
+                                child: AppText("I am a Lender"),
                               ),
                             ],
                           ),
                         ],
                       ),
                     ),
+
                     const SizedBox(width: 50),
+
                     Expanded(
                       child: Container(
                         height: 350,
@@ -240,7 +230,9 @@ class HomeScreen extends StatelessWidget {
                   letterSpacing: 4,
                 ),
               ),
+
               const SizedBox(height: 10),
+
               AppText(
                 "How Rushd Works",
                 style: const TextStyle(
@@ -249,18 +241,18 @@ class HomeScreen extends StatelessWidget {
                   fontWeight: FontWeight.w900,
                 ),
               ),
+
               const SizedBox(height: 15),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 250),
                 child: AppText(
                   "A guided flow from loan type selection to lender decision, designed for a clearer borrowing experience.",
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 15,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 15),
                 ),
               ),
+
               const SizedBox(height: 30),
 
               // Process Cards Row
@@ -345,15 +337,13 @@ class HomeScreen extends StatelessWidget {
                   color: Colors.lightBlue.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.lightBlue,
-                  size: 20,
-                ),
+                child: Icon(icon, color: Colors.lightBlue, size: 20),
               ),
             ],
           ),
+
           const SizedBox(height: 20),
+
           AppText(
             title,
             style: const TextStyle(
@@ -362,13 +352,12 @@ class HomeScreen extends StatelessWidget {
               fontSize: 18,
             ),
           ),
+
           const SizedBox(height: 10),
+
           AppText(
             description,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 12),
           ),
         ],
       ),
@@ -401,7 +390,9 @@ class HomeScreen extends StatelessWidget {
                     letterSpacing: 4,
                   ),
                 ),
+
                 const SizedBox(height: 15),
+
                 AppText(
                   "A smarter way to find\nsuitable loan offers.",
                   style: const TextStyle(
@@ -410,7 +401,9 @@ class HomeScreen extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
+
                 const SizedBox(height: 15),
+
                 AppText(
                   "Rushd helps borrowers compare offers based on their financial profile and gives lenders a structured way to review submitted requests.",
                   style: const TextStyle(
@@ -422,31 +415,27 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
+
           const SizedBox(width: 20),
+
           Expanded(
             child: Column(
               children: [
                 Row(
                   children: [
-                    featureCard(
-                      "AI-supported eligibility score",
-                    ),
+                    featureCard("AI-supported eligibility score"),
                     const SizedBox(width: 15),
-                    featureCard(
-                      "Compare offers from partner banks",
-                    ),
+                    featureCard("Compare offers from partner banks"),
                   ],
                 ),
+
                 const SizedBox(height: 15),
+
                 Row(
                   children: [
-                    featureCard(
-                      "Submit requests inside the platform",
-                    ),
+                    featureCard("Submit requests inside the platform"),
                     const SizedBox(width: 15),
-                    featureCard(
-                      "Track lender decisions clearly",
-                    ),
+                    featureCard("Track lender decisions clearly"),
                   ],
                 ),
               ],
@@ -473,17 +462,13 @@ class HomeScreen extends StatelessWidget {
               height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.lightBlue,
-                ),
+                border: Border.all(color: Colors.lightBlue),
               ),
-              child: const Icon(
-                Icons.check,
-                color: Colors.lightBlue,
-                size: 14,
-              ),
+              child: const Icon(Icons.check, color: Colors.lightBlue, size: 14),
             ),
+
             const SizedBox(width: 12),
+
             Expanded(
               child: AppText(
                 text,
@@ -505,16 +490,13 @@ class HomeScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(35),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05), 
+        color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.08),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -531,7 +513,9 @@ class HomeScreen extends StatelessWidget {
                       letterSpacing: 2.5,
                     ),
                   ),
+
                   const SizedBox(height: 6),
+
                   AppText(
                     "Compare offers from verified banks",
                     style: const TextStyle(
@@ -542,7 +526,9 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(width: 30),
+
               Flexible(
                 child: Container(
                   constraints: const BoxConstraints(maxWidth: 400),
@@ -561,42 +547,40 @@ class HomeScreen extends StatelessWidget {
 
           const SizedBox(height: 35),
 
-        
           Row(
             children: partnerBanks.map((bank) {
               return Expanded(
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 6),
                   height: 145,
-padding: const EdgeInsets.all(15),
+                  padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.06), 
+                    color: Colors.white.withOpacity(0.06),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.05),
-                    ),
+                    border: Border.all(color: Colors.white.withOpacity(0.05)),
                   ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                     
                       Container(
-  width: double.infinity,
-  height: 75,
-  padding: const EdgeInsets.all(5),
-  child: Image.asset(
-    bank["logo"]!,
-    fit: BoxFit.contain,
-    errorBuilder: (context, error, stackTrace) {
-      return const Icon(
-        Icons.account_balance,
-        color: Colors.blueGrey,
-        size: 35,
-      );
-    },
-  ),
-),
+                        width: double.infinity,
+                        height: 75,
+                        padding: const EdgeInsets.all(5),
+                        child: Image.asset(
+                          bank["logo"]!,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.account_balance,
+                              color: Colors.blueGrey,
+                              size: 35,
+                            );
+                          },
+                        ),
+                      ),
+
                       const SizedBox(height: 8),
+
                       // اسم البنك
                       AppText(
                         bank["name"]!,
